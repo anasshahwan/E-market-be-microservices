@@ -9,7 +9,7 @@ router.get("/", (req, res, next) => {
 
 router.post("/", (req, res, next) => {
   res.status(200).json({
-    message: "Post all companies",
+    message: "Add a Company",
   });
 });
 
