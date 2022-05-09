@@ -10,7 +10,7 @@ router.get("/", (req, res, next) => {
   });
 });
 
-router.post("/", (req, res, next) => {
+router.post("/register", (req, res, next) => {
   console.log(req.body);
   const company = new Company({
     _id: new mongoose.Types.ObjectId(),
@@ -34,13 +34,19 @@ router.post("/", (req, res, next) => {
     });
 });
 
-router.get("/:companyId", (req, res, next) => {
+router.get("/info/:company_code", (req, res, next) => {
   const id = req.params.companyId;
   res.status(200).json({
     message: "Get a Company By " + id,
   });
 });
 
+router.get("/getall", (req, res, next) => {
+  const id = req.params.companyId;
+  res.status(200).json({
+    message: "Get a Company By " + id,
+  });
+});
 router.patch("/:companyId", (req, res, next) => {
   const id = req.params.companyId;
   res.status(200).json({
@@ -48,7 +54,7 @@ router.patch("/:companyId", (req, res, next) => {
   });
 });
 
-router.delete("/:companyId", (req, res, next) => {
+router.delete("delete/:company_code", (req, res, next) => {
   const id = req.params.companyId;
   res.status(200).json({
     message: "Delete a Company By " + id,
