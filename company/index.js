@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, "./.env") });
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 const app = express();
 const port = 8080;
 
@@ -16,10 +18,23 @@ mongoose.connect(
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.get("/", (req, res) => {
-  res.send("Hello Company Api");
-});
+const swaggerOptions = {
+  swaggerDefinition: {
+    components: {},
+    info: {
+      title: "Company API",
+      description: "Company API allows you to Interact with Company Endpoints",
+      contact: {
+        name: "Anas Shahwan",
+      },
+      servers: [`http://localhost:${port}`],
+    },
+  },
+  apis: ["./routes/*.js"],
+};
 
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/api/v1.0/market/company", companyRoutes);
 
 app.listen(port, () => {
