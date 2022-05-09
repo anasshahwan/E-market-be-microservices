@@ -1,13 +1,30 @@
 const express = require("express");
 const router = express.Router();
 
-router.get("/", (req, res, next) => {
+/**
+ * @swagger
+ * tags:
+ *   name: Stocks
+ *   description: The books managing API
+ */
+
+/**
+ * @swagger
+ * /api/v1.0/market/stock/get/{company_code}/{start_date}/{end_date}:
+ *  get:
+ *    tags: [Stocks]
+ *    description: Use to demo
+ *    responses:
+ *      '200':
+ *        description: A Successfull Response
+ */
+router.get("/get/:company_code/:start_date/:end_date", (req, res, next) => {
   res.status(200).json({
     message: "Get all Stocks",
   });
 });
 
-router.post("/", (req, res, next) => {
+router.post("/add/:company_code", (req, res, next) => {
   res.status(200).json({
     message: "Add a Stock",
   });

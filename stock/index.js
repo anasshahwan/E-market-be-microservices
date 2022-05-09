@@ -1,6 +1,8 @@
 const express = require("express");
 const mysql = require("mysql");
 const app = express();
+const swaggerJsDoc = require("swagger-jsdoc");
+const swaggerUi = require("swagger-ui-express");
 const stockRoutes = require("./routes/stocks");
 const port = 8081;
 const path = require("path");
@@ -22,6 +24,24 @@ con.connect((err) => {
   console.log("connected:D");
 });
 
+const swaggerOptions = {
+  swaggerDefinition: {
+    components: {},
+    info: {
+      title: "Stock Api",
+      description: "Stock Api allows you to get all the stocks",
+      contact: {
+        name: "Anas Shahwan",
+      },
+      servers: ["http://localhost:8081"],
+    },
+  },
+  apis: ["./routes/*.js"],
+};
+
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
 const createStocksTable = () => {
   const sql = "CREATE TABLE stocks (name VARCHAR(255), price INT)";
   con.query(sql, function (err, result) {
@@ -34,7 +54,7 @@ app.get("/", (req, res) => {
   res.send("Hello Stock Api");
 });
 
-app.use("/stocks", stockRoutes);
+app.use("/api/v1.0/market/stock", stockRoutes);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
