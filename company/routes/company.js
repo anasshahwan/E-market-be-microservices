@@ -113,18 +113,23 @@ router.post("/register", (req, res, next) => {
     });
 });
 
-router.get("/info/:company_code", (req, res, next) => {
-  const id = req.params.companyId;
+router.get("/info/:company_code", async (req, res, next) => {
+  const id = req.params.company_code;
+
+  const result = await Company.find({ company_code: id }).exec();
+
   res.status(200).json({
     message: "Get a Company By " + id,
+    company_details: result,
   });
 });
 
-router.get("/getall", (req, res, next) => {
+router.get("/getall", async (req, res, next) => {
   const id = req.params.companyId;
-  res.status(200).json({
-    message: "Get a Company By " + id,
-  });
+  const companies = await Company.find({});
+
+  res.status(200).json({ companies });
+  // TODO get the stocks that related to the company..
 });
 router.patch("/:companyId", (req, res, next) => {
   const id = req.params.companyId;
@@ -133,10 +138,17 @@ router.patch("/:companyId", (req, res, next) => {
   });
 });
 
-router.delete("delete/:company_code", (req, res, next) => {
-  const id = req.params.companyId;
-  res.status(200).json({
-    message: "Delete a Company By " + id,
+router.delete("/delete/:company_code", (req, res, next) => {
+  const id = req.params.company_code;
+
+  Company.findOneAndDelete({ company_code: id }, function (err) {
+    if (err) console.log(err);
+    res.status(200).json({
+      message: "Delete a Company By " + id,
+    });
   });
+
+  // TODO Remove the stock prices related to Company_code
+  // Send an event to rabbitMQ. with the ID.
 });
 module.exports = router;

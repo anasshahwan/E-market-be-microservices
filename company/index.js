@@ -13,7 +13,7 @@ const companyRoutes = require("./routes/company");
 mongoose.connect(
   "mongodb+srv://anas:" +
     process.env.MONGO_ATLAS_PW +
-    "@cluster0.gxqhf.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+    "@cluster0.gxqhf.mongodb.net/e-market?retryWrites=true&w=majority"
 );
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
