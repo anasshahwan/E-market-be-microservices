@@ -1,5 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
+const mysql = require("mysql2");
+const mySqlConnection = require("../helpers/mysql-connection");
 
 /**
  * @swagger
@@ -24,9 +27,17 @@ router.get("/get/:company_code/:start_date/:end_date", (req, res, next) => {
   });
 });
 
-router.post("/add/:company_code", (req, res, next) => {
+router.post("/add/:company_code", async (req, res, next) => {
+  const stock_price = req.body.stock_price;
+  const company_code = req.params.company_code;
+
+  var sql = `INSERT INTO stocks (company_code, stock_price) VALUES ("${company_code}", ${stock_price})`;
+  mySqlConnection.query(sql, function (err, result) {
+    if (err) throw err;
+    console.log("1 record inserted");
+  });
   res.status(200).json({
-    message: "Add a Stock",
+    message: "Add a Stock to company " + req.params.company_code,
   });
 });
 
