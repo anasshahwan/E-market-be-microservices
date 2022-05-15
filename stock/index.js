@@ -7,6 +7,7 @@ const bodyParser = require("body-parser");
 const mySqlConnection = require("./helpers/mysql-connection");
 const port = 8081;
 const path = require("path");
+const amqp = require("amqplib");
 require("dotenv").config({ path: path.resolve(__dirname, "./.env") });
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -26,6 +27,24 @@ const swaggerOptions = {
   },
   apis: ["./routes/*.js"],
 };
+
+async function connect() {
+  const msg = { id: 4 };
+  try {
+    const connection = await amqp.connect("amqp://localhost:5672");
+    const channel = await connection.createChannel();
+    //    const result = await channel.assertQueue("e-market");
+    channel.consume("e-market", (msg) => {
+      console.log(msg.content.toString());
+      channel.ack(msg);
+      console.log("Queue Was Acknowledge");
+    });
+  } catch (ex) {
+    console.log(ex);
+  }
+}
+
+connect();
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
