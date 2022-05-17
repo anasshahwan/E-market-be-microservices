@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
+const amqp = require("amqplib");
 
 const Company = require("../models/company.js");
 
@@ -114,20 +115,38 @@ router.post("/register", (req, res, next) => {
 });
 
 router.get("/info/:company_code", async (req, res, next) => {
-  const id = req.params.company_code;
+  const company_code = req.params.company_code;
 
-  const result = await Company.find({ company_code: id }).exec();
+  const result = await Company.find({ company_code }).exec();
 
-  res.status(200).json({
-    message: "Get a Company By " + id,
-    company_details: result,
-  });
+  const msg = { company_code };
+  try {
+    const connection = await amqp.connect("amqp://localhost:5672");
+    const channel = await connection.createChannel();
+    // const result = await channel.assertQueue("e-market");
+    channel.sendToQueue("e-market", Buffer.from(company_code));
+    console.log("Job send successfully");
+
+    /// now its time to listen
+    channel.consume("send-stock-prices", (msg) => {
+      const data = msg.content.toString();
+      console.log(typeof data);
+      let js = eval(data);
+      channel.ack(msg);
+      res.status(200).json({
+        message: "Get a Company By " + company_code,
+        company_details: result,
+        stock_prices: js,
+      });
+    });
+  } catch (ex) {
+    console.log(ex);
+  }
 });
 
 router.get("/getall", async (req, res, next) => {
   const id = req.params.companyId;
   const companies = await Company.find({});
-
   res.status(200).json({ companies });
   // TODO get the stocks that related to the company..
 });

@@ -31,7 +31,7 @@ async function connect() {
   }
 }
 
-connect();
+//connect();
 const swaggerOptions = {
   swaggerDefinition: {
     components: {},

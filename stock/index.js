@@ -35,9 +35,23 @@ async function connect() {
     const channel = await connection.createChannel();
     //    const result = await channel.assertQueue("e-market");
     channel.consume("e-market", (msg) => {
-      console.log(msg.content.toString());
-      channel.ack(msg);
-      console.log("Queue Was Acknowledge");
+      let company_code = msg.content.toString();
+
+      const sql = `select stock_price,create_at from stocks where company_code="${company_code}"`;
+      mySqlConnection.query(sql, async function (err, result) {
+        if (err) throw err;
+        console.log("Fetch the Stocks");
+        console.log(result);
+        channel.ack(msg);
+        console.log(" First Queue Was Acknowledge");
+        /// send stock prices  to company
+        const createChannel = await channel.assertQueue("send-stock-prices");
+        channel.sendToQueue(
+          "send-stock-prices",
+          Buffer.from(JSON.stringify(result))
+        );
+        console.log("Job send successfully");
+      });
     });
   } catch (ex) {
     console.log(ex);
