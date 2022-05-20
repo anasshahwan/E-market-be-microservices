@@ -5,6 +5,31 @@ const amqp = require("amqplib");
 
 const Company = require("../models/company.js");
 
+var channel, connection;
+var jsonData = [];
+
+async function connect() {
+  const amqpServer = "amqp://localhost:5672";
+  connection = await amqp.connect(amqpServer);
+  channel = await connection.createChannel();
+  await channel.assertQueue("PRODUCT");
+}
+
+connect().then(async () => {
+  await channel.consume("STOCK", (msg) => {
+    let data = JSON.parse(msg.content);
+    console.log();
+    jsonData.push(data);
+    console.log(jsonData, "inside");
+    channel.ack(msg);
+
+    setTimeout(() => {
+      //  console.log("ack", jsonData);
+      channel.ackAll(msg);
+    }, 1000);
+  });
+});
+
 /**
  * @swagger
  * components:
@@ -120,28 +145,29 @@ router.get("/info/:company_code", async (req, res, next) => {
   const result = await Company.find({ company_code }).exec();
 
   const msg = { company_code };
-  try {
-    const connection = await amqp.connect("amqp://localhost:5672");
-    const channel = await connection.createChannel();
-    // const result = await channel.assertQueue("e-market");
-    channel.sendToQueue("e-market", Buffer.from(company_code));
-    console.log("Job send successfully");
 
-    /// now its time to listen
-    channel.consume("send-stock-prices", (msg) => {
-      const data = msg.content.toString();
-      console.log(typeof data);
-      let js = eval(data);
-      channel.ack(msg);
-      res.status(200).json({
-        message: "Get a Company By " + company_code,
-        company_details: result,
-        stock_prices: js,
-      });
+  try {
+    // Here im sending the Company Code to The Queue
+    await channel.sendToQueue("COMPANY", Buffer.from(company_code), {
+      persistent: true,
     });
+    console.log("Job send Comapny successfully");
   } catch (ex) {
-    console.log(ex);
+    throw new Error("Something Wrong!!");
   }
+  /// now its time to listen
+
+  const resMsg = {
+    message: "Get a Company By " + company_code,
+    company_details: result,
+    stock_prices: eval(jsonData),
+  };
+  //console.log(resMsg);
+  jsonData.length = 0;
+  setTimeout(() => {
+    //  console.log("ack", jsonData);
+    res.status(200).json(resMsg);
+  }, 1000);
 });
 
 router.get("/getall", async (req, res, next) => {

@@ -8,10 +8,13 @@ const mySqlConnection = require("./helpers/mysql-connection");
 const port = 8081;
 const path = require("path");
 const amqp = require("amqplib");
+const cors = require("cors");
 require("dotenv").config({ path: path.resolve(__dirname, "./.env") });
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cors());
+var channel, connection;
 
 const swaggerOptions = {
   swaggerDefinition: {
@@ -29,36 +32,36 @@ const swaggerOptions = {
 };
 
 async function connect() {
-  const msg = { id: 4 };
-  try {
-    const connection = await amqp.connect("amqp://localhost:5672");
-    const channel = await connection.createChannel();
-    //    const result = await channel.assertQueue("e-market");
-    channel.consume("e-market", (msg) => {
-      let company_code = msg.content.toString();
-
-      const sql = `select stock_price,create_at from stocks where company_code="${company_code}"`;
-      mySqlConnection.query(sql, async function (err, result) {
-        if (err) throw err;
-        console.log("Fetch the Stocks");
-        console.log(result);
-        channel.ack(msg);
-        console.log(" First Queue Was Acknowledge");
-        /// send stock prices  to company
-        const createChannel = await channel.assertQueue("send-stock-prices");
-        channel.sendToQueue(
-          "send-stock-prices",
-          Buffer.from(JSON.stringify(result))
-        );
-        console.log("Job send successfully");
-      });
-    });
-  } catch (ex) {
-    console.log(ex);
-  }
+  const amqpServer = "amqp://localhost:5672";
+  connection = await amqp.connect(amqpServer);
+  channel = await connection.createChannel();
+  await channel.assertQueue("STOCK");
 }
+connect().then(() => {
+  console.log("RabbitMQ is connected. in Stock API");
+  channel.consume("COMPANY", (data) => {
+    // do the data base here.s
+    console.log("Consuming STOCK service");
+    const msg = data.content.toString();
+    console.log("Im a stock api and listening to company", msg);
 
-connect();
+    /// I will do the insertion here ..
+    let company_code = data.content.toString();
+
+    const sql = `select stock_price,create_at from stocks where company_code="${company_code}"`;
+
+    mySqlConnection.query(sql, async function (err, result) {
+      if (err) throw err;
+      console.log("Fetch the Stocks");
+      channel.ack(data);
+      console.log("Aknolewege");
+
+      console.log(result);
+      channel.sendToQueue("STOCK", Buffer.from(JSON.stringify({ result })));
+    });
+    console.log("from stock was send to company");
+  });
+});
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));

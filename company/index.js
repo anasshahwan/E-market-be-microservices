@@ -6,10 +6,12 @@ require("dotenv").config({ path: path.resolve(__dirname, "./.env") });
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 const amqp = require("amqplib");
+const cors = require("cors");
 const app = express();
 const port = 8080;
 
 const companyRoutes = require("./routes/company");
+app.use(cors());
 
 mongoose.connect(
   "mongodb+srv://anas:" +
@@ -18,20 +20,17 @@ mongoose.connect(
 );
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-async function connect() {
-  const msg = { id: 4 };
-  try {
-    const connection = await amqp.connect("amqp://localhost:5672");
-    const channel = await connection.createChannel();
-    const result = await channel.assertQueue("e-market");
-    channel.sendToQueue("e-market", Buffer.from(JSON.stringify(msg)));
-    console.log("Job send successfully");
-  } catch (ex) {
-    console.log(ex);
-  }
-}
 
-//connect();
+var channel, connection;
+
+// async function connect() {
+//   const amqpServer = "amqp://localhost:5672";
+//   connection = await amqp.connect(amqpServer);
+//   channel = await connection.createChannel();
+//   await channel.assertQueue("COMPANY");
+// }
+// connect().then(() => console.log("RabbitMQ is Connected Company API"));
+
 const swaggerOptions = {
   swaggerDefinition: {
     components: {},
