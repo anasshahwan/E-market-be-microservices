@@ -110,8 +110,17 @@ router.get("/", (req, res, next) => {
  *         description: Some server error
  */
 
-router.post("/register", (req, res, next) => {
+router.post("/register", async (req, res, next) => {
   console.log(req.body);
+
+  const result = await Company.find({
+    company_code: req.body.company_code,
+  }).exec();
+  if (result.length == 1)
+    return res.status(201).json({
+      message: "Company Code Already Exists",
+    });
+
   const company = new Company({
     _id: new mongoose.Types.ObjectId(),
     company_code: req.body.company_code,
@@ -155,7 +164,7 @@ router.get("/info/:company_code", async (req, res, next) => {
   } catch (ex) {
     throw new Error("Something Wrong!!");
   }
-  /// now its time to listen
+  /// now its time to listen on the top!
 
   const resMsg = {
     message: "Get a Company By " + company_code,
@@ -171,10 +180,27 @@ router.get("/info/:company_code", async (req, res, next) => {
 });
 
 router.get("/getall", async (req, res, next) => {
-  const id = req.params.companyId;
   const companies = await Company.find({});
+
   res.status(200).json({ companies });
+
   // TODO get the stocks that related to the company..
+
+  // for (var i = 0; i < companies.length; i++) {
+  //   //companies[i];
+  //   console.log(companies[i].company_code);
+  //   await channel.sendToQueue(
+  //     "COMPANY_1",
+  //     Buffer.from(companies[i].company_code),
+  //     {
+  //       persistent: true,
+  //     }
+  //   );
+  //   console.log("Job for ", companies[i].company_code);
+  // }
+  // send
+
+  // before I return the companies I need the stocks..
 });
 router.patch("/:companyId", (req, res, next) => {
   const id = req.params.companyId;
@@ -183,13 +209,21 @@ router.patch("/:companyId", (req, res, next) => {
   });
 });
 
-router.delete("/delete/:company_code", (req, res, next) => {
+router.delete("/delete/:company_code", async (req, res, next) => {
   const id = req.params.company_code;
+  const result = await Company.find({
+    company_code: id,
+  }).exec();
+  console.log("test", result);
+  if (result.length == 0)
+    return res.status(201).json({
+      message: "Company Code Is Not Exists.. ",
+    });
 
   Company.findOneAndDelete({ company_code: id }, function (err) {
     if (err) console.log(err);
     res.status(200).json({
-      message: "Delete a Company By " + id,
+      message: id + " was Deleted ..",
     });
   });
 

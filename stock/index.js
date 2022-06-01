@@ -32,7 +32,7 @@ const swaggerOptions = {
 };
 
 async function connect() {
-  const amqpServer = "amqp://localhost:5672";
+  const amqpServer = "amqp://host.docker.internal:5672";
   connection = await amqp.connect(amqpServer);
   channel = await connection.createChannel();
   await channel.assertQueue("STOCK");
@@ -61,6 +61,28 @@ connect().then(() => {
     });
     console.log("from stock was send to company");
   });
+  // channel.consume("COMPANY_1", (data) => {
+  //   // do the data base here.s
+  //   console.log("Consuming company_1 ");
+  //   const msg = data.content.toString();
+  //   console.log(msg);
+
+  //   /// I will do the insertion here ..
+  //   let company_code = data.content.toString();
+
+  //   const sql = `select stock_price,create_at from stocks where company_code="${company_code}"`;
+
+  //   mySqlConnection.query(sql, async function (err, result) {
+  //     if (err) throw err;
+  //     console.log("Fetch the Stocks");
+  //     channel.ack(data);
+  //     console.log("Aknolewege");
+
+  //     console.log(result);
+  //     // channel.sendToQueue("STOCK_1", Buffer.from(JSON.stringify({ result })));
+  //   });
+  //   console.log("from stock was send to company");
+  // });
 });
 
 const swaggerDocs = swaggerJsDoc(swaggerOptions);
