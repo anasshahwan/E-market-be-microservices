@@ -21,16 +21,6 @@ mongoose.connect(
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-var channel, connection;
-
-// async function connect() {
-//   const amqpServer = "amqp://localhost:5672";
-//   connection = await amqp.connect(amqpServer);
-//   channel = await connection.createChannel();
-//   await channel.assertQueue("COMPANY");
-// }
-// connect().then(() => console.log("RabbitMQ is Connected Company API"));
-
 const swaggerOptions = {
   swaggerDefinition: {
     components: {},

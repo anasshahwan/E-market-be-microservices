@@ -37,6 +37,7 @@ async function connect() {
   channel = await connection.createChannel();
   await channel.assertQueue("STOCK");
 }
+
 connect().then(() => {
   console.log("RabbitMQ is connected. in Stock API");
   channel.consume("COMPANY", (data) => {

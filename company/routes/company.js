@@ -9,7 +9,7 @@ var channel, connection;
 var jsonData = [];
 
 async function connect() {
-  const amqpServer = "amqp://localhost:5672";
+  const amqpServer = "amqp://host.docker.internal:5672";
   connection = await amqp.connect(amqpServer);
   channel = await connection.createChannel();
   await channel.assertQueue("PRODUCT");
